@@ -1,0 +1,22 @@
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 mb-4">Bem-vindo ao WhatsApp Poll</h1>
+        <p class="lead">
+            Esta é uma aplicação para criar e gerenciar enquetes via WhatsApp.
+            Use o menu acima para navegar entre as funcionalidades.
+        </p>
+        
+        <div class="mt-5">
+            <h2 class="h4 mb-4">Status do WhatsApp</h2>
+            <p>
+                Status atual: 
+                <span class="badge <%= connected ? 'bg-success' : 'bg-danger' %>">
+                    <%= connected ? 'Conectado' : 'Desconectado' %>
+                </span>
+            </p>
+            <p class="text-muted">
+                Se estiver desconectado, aguarde o QR Code aparecer para fazer a conexão.
+            </p>
+        </div>
+    </div>
+</div> 

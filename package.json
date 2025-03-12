@@ -1,0 +1,44 @@
+{
+  "name": "poc-poll",
+  "version": "1.0.0",
+  "description": "Aplicação de enquetes WhatsApp com Express e Baileys",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "ts-node src/app.ts",
+    "dev": "nodemon",
+    "build": "tsc"
+  },
+  "keywords": [
+    "whatsapp",
+    "poll",
+    "baileys",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.5.0",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-ejs-layouts": "^2.5.1",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "qrcode": "^1.5.3",
+    "qrcode-terminal": "^0.12.0",
+    "reflect-metadata": "^0.2.1",
+    "socket.io": "^4.7.4",
+    "sqlite3": "^5.1.7",
+    "typeorm": "^0.3.19"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/express-ejs-layouts": "^2.5.4",
+    "@types/node": "^20.17.24",
+    "@types/qrcode": "^1.5.5",
+    "@types/qrcode-terminal": "^0.12.2",
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}

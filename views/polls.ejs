@@ -1,0 +1,74 @@
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Nova Enquete</h5>
+                <form id="pollForm">
+                    <div class="mb-3">
+                        <label for="targetNumber" class="form-label">Número do WhatsApp</label>
+                        <input type="text" class="form-control" id="targetNumber" required>
+                        <div class="form-text">Formato: DDD + Número (ex: 11999999999)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="question" class="form-label">Pergunta</label>
+                        <input type="text" class="form-control" id="question" required>
+                    </div>
+                    <div class="mb-3" id="optionsContainer">
+                        <label class="form-label">Opções</label>
+                        <div class="mb-3">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control option-input" required>
+                                <button type="button" class="btn btn-danger remove-option" disabled>
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control option-input" required>
+                                <button type="button" class="btn btn-danger remove-option" disabled>
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="addOption">
+                            <i class="bi bi-plus-circle"></i>
+                            Adicionar Opção
+                        </button>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i>
+                        Enviar Enquete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Enquetes Enviadas</h5>
+                    <div class="input-group" style="width: auto;">
+                        <input type="text" class="form-control" id="filterNumber" placeholder="Filtrar por número">
+                        <button class="btn btn-outline-secondary" type="button" id="filterButton">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Número</th>
+                                <th>Pergunta</th>
+                                <th>Opções</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pollsList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
