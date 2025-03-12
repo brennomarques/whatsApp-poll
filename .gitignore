@@ -9,6 +9,12 @@ auth/
 *.session
 *.store.json
 
+# Database
+database.sqlite
+*.sqlite
+*.sqlite3
+*.db
+
 # Build output
 dist/
 build/
