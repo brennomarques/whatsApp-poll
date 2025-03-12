@@ -6,8 +6,8 @@ export const AppDataSource = new DataSource({
     type: "sqlite",
     database: "database.sqlite",
     synchronize: true,
-    logging: false,
+    logging: true,
     entities: [Poll, Connection],
+    subscribers: [],
     migrations: [],
-    subscribers: []
 }); 

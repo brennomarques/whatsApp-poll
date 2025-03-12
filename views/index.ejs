@@ -1,23 +1,366 @@
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body text-center">
-                <h1 class="card-title">Bem-vindo ao WhatsApp Poll</h1>
-                <p class="card-text">
-                    Este é um sistema para criar e gerenciar enquetes no WhatsApp.
-                    Para começar, conecte seu WhatsApp clicando no botão acima.
-                </p>
-                <div class="mt-4">
-                    <a href="/polls" class="btn btn-primary me-2">
-                        <i class="bi bi-bar-chart-fill"></i>
-                        Criar Enquete
-                    </a>
-                    <a href="/messages" class="btn btn-secondary">
-                        <i class="bi bi-chat-dots-fill"></i>
-                        Enviar Mensagem
-                    </a>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Enquetes - WhatsApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Header com título e botão de nova enquete -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <a href="/" class="text-decoration-none text-dark">Enquetes</a>
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPollModal">
+                <i class="bi bi-plus-lg"></i> Nova Enquete
+            </button>
+        </div>
+
+        <!-- Lista de Enquetes -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 position-relative" style="min-height: 80vh">
+            <% if (polls && polls.length > 0) { %>
+                <% polls.forEach(poll => { %>
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span class="badge <%= poll.status === 'SENT' ? 'bg-success' : 'bg-warning' %>">
+                                    <%= poll.status === 'SENT' ? 'Enviada' : 'Pendente' %>
+                                </span>
+                                <small class="text-muted">
+                                    <%= new Date(poll.createdAt).toLocaleString('pt-BR') %>
+                                </small>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title mb-3"><%= poll.question %></h5>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-2">
+                                        <i class="bi bi-people-fill text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <strong><%= poll.totalVotes || 0 %></strong> votos
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button class="btn btn-sm btn-outline-primary me-2" onclick="showPollDetails('<%= poll.id %>')">
+                                        <i class="bi bi-bar-chart-fill"></i> Resultados
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deletePoll('<%= poll.id %>')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="position-absolute top-50 start-50 translate-middle w-100">
+                    <div class="text-center">
+                        <i class="bi bi-clipboard-data display-1 text-muted mb-4"></i>
+                        <h4 class="mb-3">Nenhuma enquete encontrada</h4>
+                        <p class="text-muted mb-4">
+                            <a href="#" class="text-primary text-decoration-none" data-bs-toggle="modal" data-bs-target="#newPollModal">
+                                Clique aqui
+                            </a> 
+                            para criar sua primeira enquete
+                        </p>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Modal Nova Enquete -->
+        <div class="modal fade" id="newPollModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nova Enquete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="newPollForm">
+                            <div class="mb-3">
+                                <label for="recipient" class="form-label">Número ou Grupo</label>
+                                <input type="text" class="form-control" id="recipient" required>
+                                <small class="text-muted">Ex: 11999999999 ou nome do grupo</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="question" class="form-label">Pergunta</label>
+                                <input type="text" class="form-control" id="question" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label d-flex justify-content-between">
+                                    <span>Opções</span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addOption()">
+                                        <i class="bi bi-plus-lg"></i> Adicionar Opção
+                                    </button>
+                                </label>
+                                <div id="optionsContainer">
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" name="options[]" required>
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" name="options[]" required>
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="savePoll()">
+                            <i class="bi bi-send"></i> Salvar e Enviar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Detalhes -->
+        <div class="modal fade" id="pollDetailsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Resultados da Enquete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="pollDetails">
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-2">Pergunta</h6>
+                                <p id="modalQuestion" class="h5"></p>
+                            </div>
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-3">Resultados</h6>
+                                <div id="resultsChart"></div>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-3">Participantes</h6>
+                                <div id="votersList" class="list-group"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div> 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Função para adicionar nova opção
+        function addOption() {
+            const container = document.getElementById('optionsContainer');
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input type="text" class="form-control" name="options[]" required>
+                <button type="button" class="btn btn-outline-danger" onclick="removeOption(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Função para remover opção
+        function removeOption(button) {
+            const totalOptions = document.getElementsByName('options[]').length;
+            if (totalOptions > 2) {
+                button.closest('.input-group').remove();
+            } else {
+                alert('A enquete precisa ter pelo menos 2 opções');
+            }
+        }
+
+        // Função para salvar e enviar enquete
+        async function savePoll() {
+            const form = document.getElementById('newPollForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const options = Array.from(document.getElementsByName('options[]'))
+                .map(input => input.value.trim())
+                .filter(value => value);
+
+            if (options.length < 2) {
+                alert('Adicione pelo menos 2 opções');
+                return;
+            }
+
+            const data = {
+                target: document.getElementById('recipient').value.trim(),
+                question: document.getElementById('question').value.trim(),
+                options
+            };
+
+            try {
+                const response = await fetch('/polls', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('newPollModal'));
+                    modal.hide();
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Erro ao criar enquete');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert(error.message || 'Erro ao criar enquete');
+            }
+        }
+
+        // Função para mostrar detalhes da enquete
+        async function showPollDetails(pollId) {
+            try {
+                const response = await fetch(`/polls/${pollId}/results`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('modalQuestion').textContent = data.question;
+                    
+                    // Limpa as divs
+                    const resultsChart = document.getElementById('resultsChart');
+                    const votersList = document.getElementById('votersList');
+                    resultsChart.innerHTML = '';
+                    votersList.innerHTML = '';
+                    
+                    // Adiciona as opções e resultados
+                    data.options.forEach(option => {
+                        const percentage = (option.votes / data.totalVotes * 100) || 0;
+                        
+                        const optionDiv = document.createElement('div');
+                        optionDiv.className = 'mb-3';
+                        optionDiv.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="h6 mb-0">${option.text}</span>
+                                <span class="badge bg-primary">${option.votes} votos</span>
+                            </div>
+                            <div class="progress" style="height: 10px">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: ${percentage}%" 
+                                     title="${percentage.toFixed(1)}%">
+                                </div>
+                            </div>
+                            <small class="text-muted">${percentage.toFixed(1)}%</small>
+                        `;
+                        resultsChart.appendChild(optionDiv);
+                    });
+                    
+                    // Adiciona a lista de votantes
+                    if (data.voters && data.voters.length > 0) {
+                        data.voters.forEach(voter => {
+                            const voterItem = document.createElement('div');
+                            voterItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                            voterItem.innerHTML = `
+                                <div>
+                                    <i class="bi bi-person-circle me-2"></i>
+                                    <span>${voter.name || voter.number}</span>
+                                </div>
+                                <span class="badge bg-primary">${voter.vote}</span>
+                            `;
+                            votersList.appendChild(voterItem);
+                        });
+                    } else {
+                        votersList.innerHTML = `
+                            <div class="text-center py-3 text-muted">
+                                <i class="bi bi-inbox display-6"></i>
+                                <p class="mt-2">Nenhum voto registrado ainda</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // Abre o modal
+                    const modal = new bootstrap.Modal(document.getElementById('pollDetailsModal'));
+                    modal.show();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar detalhes:', error);
+                alert('Erro ao carregar detalhes da enquete');
+            }
+        }
+
+        // Função para deletar enquete
+        async function deletePoll(pollId) {
+            if (!confirm('Tem certeza que deseja excluir esta enquete?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/polls/${pollId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    throw new Error('Erro ao excluir enquete');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao excluir enquete');
+            }
+        }
+    </script>
+
+    <style>
+    .card {
+        transition: transform 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        background-color: #0d6efd;
+        transition: width 0.6s ease;
+    }
+
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+    }
+
+    .list-group-item:first-child {
+        border-top: none;
+    }
+
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+
+    h1 a {
+        transition: opacity 0.2s;
+    }
+
+    h1 a:hover {
+        opacity: 0.7;
+    }
+    </style>
+</body>
+</html> 

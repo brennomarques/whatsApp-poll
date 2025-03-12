@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrImage = document.getElementById('qrCode');
     const qrLoading = document.getElementById('qrLoading');
     const qrContainer = document.getElementById('qrContainer');
-    const connectBtn = document.getElementById('connect-whatsapp');
+    const connectBtn = document.getElementById('connectBtn');
     const connectionStatus = document.getElementById('connection-status');
     
     console.log('Elementos encontrados:', {
@@ -26,107 +26,79 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Inicialização do modal Bootstrap
-    let bsQrModal;
-    try {
-        bsQrModal = new bootstrap.Modal(qrModal);
-        console.log('Modal Bootstrap inicializado com sucesso');
-    } catch (error) {
-        console.error('Erro ao inicializar modal:', error);
-        return;
-    }
+    const bsQrModal = new bootstrap.Modal(qrModal);
 
     // Função para atualizar o status na UI
     function updateConnectionStatus(status) {
         console.log('Atualizando status:', status);
         if (connectionStatus && connectBtn) {
             if (status === 'connected') {
-                connectionStatus.textContent = 'Conectado';
-                connectionStatus.classList.remove('bg-danger');
-                connectionStatus.classList.add('bg-success');
+                connectionStatus.innerHTML = '<span class="text-success">Conectado</span>';
                 connectBtn.disabled = true;
                 if (bsQrModal) bsQrModal.hide();
             } else {
-                connectionStatus.textContent = 'Desconectado';
-                connectionStatus.classList.remove('bg-success');
-                connectionStatus.classList.add('bg-danger');
+                connectionStatus.innerHTML = '<span class="text-danger">Desconectado</span>';
                 connectBtn.disabled = false;
             }
         }
     }
 
-    // Event listener para o botão de conectar
-    if (connectBtn) {
-        connectBtn.addEventListener('click', () => {
-            console.log('Botão de conexão clicado');
-            
-            // Reset do estado do modal
-            if (qrImage) qrImage.src = '';
-            if (qrLoading) qrLoading.style.display = 'block';
-            if (qrContainer) qrContainer.style.display = 'none';
-            
-            // Mostra o modal
-            bsQrModal.show();
-            
-            // Solicita conexão
-            socket.emit('connect-whatsapp');
-            console.log('Solicitação de conexão enviada');
-        });
-        console.log('Event listener do botão configurado');
-    }
-
-    // Socket.IO event handlers
+    // Quando o socket conectar
     socket.on('connect', () => {
         console.log('Socket.IO conectado');
-        // Verifica o status inicial quando conectar
         socket.emit('check-connection');
     });
 
-    socket.on('disconnect', () => {
-        console.log('Socket.IO desconectado');
-        updateConnectionStatus('disconnected');
-    });
-
+    // Atualiza o status da conexão
     socket.on('connection-status', (status) => {
-        console.log('Status inicial recebido:', status);
-        updateConnectionStatus(status);
+        console.log('Status da conexão:', status);
+        if (status === 'connected') {
+            connectionStatus.innerHTML = '<span class="text-success">Conectado</span>';
+            connectBtn.disabled = true;
+            bsQrModal.hide();
+        } else {
+            connectionStatus.innerHTML = '<span class="text-danger">Desconectado</span>';
+            connectBtn.disabled = false;
+        }
     });
 
+    // Quando receber o QR Code
     socket.on('qr', (qr) => {
         console.log('QR Code recebido');
-        
-        if (!qrImage || !qrLoading || !qrContainer) {
-            console.error('Elementos do QR Code não encontrados');
-            return;
-        }
-
-        try {
-            // Atualiza o QR Code
-            qrImage.onload = () => {
-                console.log('QR Code carregado com sucesso');
-                qrLoading.style.display = 'none';
-                qrContainer.style.display = 'block';
-            };
-
-            qrImage.onerror = (error) => {
-                console.error('Erro ao carregar QR Code:', error);
-                qrLoading.style.display = 'block';
-                qrContainer.style.display = 'none';
-            };
-
-            qrImage.src = qr;
-        } catch (error) {
-            console.error('Erro ao exibir QR Code:', error);
-        }
+        qrImage.src = qr;
+        qrLoading.style.display = 'none';
+        qrContainer.style.display = 'block';
+        bsQrModal.show();
     });
 
+    // Quando clicar no botão de conectar
+    connectBtn.addEventListener('click', () => {
+        console.log('Solicitando conexão...');
+        qrLoading.style.display = 'block';
+        qrContainer.style.display = 'none';
+        bsQrModal.show();
+        socket.emit('connect-whatsapp');
+    });
+
+    // Quando a conexão for estabelecida
     socket.on('connection', (status) => {
-        console.log('Status de conexão recebido:', status);
-        updateConnectionStatus(status);
+        console.log('Status da conexão atualizado:', status);
+        if (status === 'connected') {
+            connectionStatus.innerHTML = '<span class="text-success">Conectado</span>';
+            connectBtn.disabled = true;
+            bsQrModal.hide();
+        } else {
+            connectionStatus.innerHTML = '<span class="text-danger">Desconectado</span>';
+            connectBtn.disabled = false;
+        }
     });
 
-    // Verifica o status inicial
-    socket.emit('check-connection');
-    console.log('Verificação inicial de status enviada');
+    // Quando o socket desconectar
+    socket.on('disconnect', () => {
+        console.log('Socket.IO desconectado');
+        connectionStatus.innerHTML = '<span class="text-danger">Desconectado</span>';
+        connectBtn.disabled = false;
+    });
 
     // Formulário de enquetes
     const pollForm = document.getElementById('pollForm');

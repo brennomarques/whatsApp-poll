@@ -1,0 +1,193 @@
+<!-- Lista de Enquetes -->
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Enquetes</h5>
+        <div class="input-group w-50">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" class="form-control" id="searchPoll" placeholder="Buscar enquete...">
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Pergunta</th>
+                        <th>Data</th>
+                        <th>Total de Votos</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (polls && polls.length > 0) { %>
+                        <% polls.forEach(poll => { %>
+                            <tr>
+                                <td><%= poll.question %></td>
+                                <td><%= new Date(poll.createdAt).toLocaleString('pt-BR') %></td>
+                                <td><%= poll.totalVotes || 0 %></td>
+                                <td>
+                                    <span class="badge <%= poll.status === 'SENT' ? 'bg-success' : 'bg-warning' %>">
+                                        <%= poll.status === 'SENT' ? 'Enviada' : 'Pendente' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-info me-1" onclick="showPollDetails('<%= poll.id %>')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deletePoll('<%= poll.id %>')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center">Nenhuma enquete encontrada</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalhes -->
+<div class="modal fade" id="pollDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes da Enquete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="pollDetails">
+                    <div class="mb-3">
+                        <h6>Pergunta:</h6>
+                        <p id="modalQuestion" class="lead"></p>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Resultados:</h6>
+                        <div id="resultsChart"></div>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Participantes:</h6>
+                        <div id="votersList" class="list-group"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Função para buscar enquetes
+document.getElementById('searchPoll').addEventListener('input', function(e) {
+    const searchText = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        const question = row.querySelector('td:first-child').textContent.toLowerCase();
+        row.style.display = question.includes(searchText) ? '' : 'none';
+    });
+});
+
+// Função para mostrar detalhes da enquete
+async function showPollDetails(pollId) {
+    try {
+        const response = await fetch(`/polls/${pollId}/results`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('modalQuestion').textContent = data.question;
+            
+            // Limpa as divs
+            const resultsChart = document.getElementById('resultsChart');
+            const votersList = document.getElementById('votersList');
+            resultsChart.innerHTML = '';
+            votersList.innerHTML = '';
+            
+            // Adiciona as opções e resultados
+            data.options.forEach(option => {
+                const percentage = (option.votes / data.totalVotes * 100) || 0;
+                
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'mb-2';
+                optionDiv.innerHTML = `
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>${option.text}</span>
+                        <span>${option.votes} votos (${percentage.toFixed(1)}%)</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+                resultsChart.appendChild(optionDiv);
+            });
+            
+            // Adiciona a lista de votantes
+            if (data.voters && data.voters.length > 0) {
+                data.voters.forEach(voter => {
+                    const voterItem = document.createElement('div');
+                    voterItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    voterItem.innerHTML = `
+                        <span>${voter.name || voter.number}</span>
+                        <span class="badge bg-primary">${voter.vote}</span>
+                    `;
+                    votersList.appendChild(voterItem);
+                });
+            } else {
+                votersList.innerHTML = '<p class="text-center">Nenhum voto registrado</p>';
+            }
+            
+            // Abre o modal
+            const modal = new bootstrap.Modal(document.getElementById('pollDetailsModal'));
+            modal.show();
+        }
+    } catch (error) {
+        console.error('Erro ao carregar detalhes:', error);
+        alert('Erro ao carregar detalhes da enquete');
+    }
+}
+
+// Função para deletar enquete
+async function deletePoll(pollId) {
+    if (!confirm('Tem certeza que deseja excluir esta enquete?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/polls/${pollId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            throw new Error('Erro ao excluir enquete');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao excluir enquete');
+    }
+}
+</script>
+
+<style>
+.progress {
+    height: 20px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.progress-bar {
+    background-color: #007bff;
+}
+
+.results-graph {
+    margin: 20px 0;
+}
+</style> 

@@ -1,23 +1,31 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
-import { WAMessageKey } from '@whiskeysockets/baileys';
 
 @Entity()
 export class Poll {
     @PrimaryGeneratedColumn()
-    id!: number;
+    id: number;
 
     @Column()
-    question!: string;
-
-    @Column('simple-array')
-    options!: string[];
+    question: string;
 
     @Column()
-    targetNumber!: string;
+    recipient: string;
+
+    @Column('simple-json')
+    options: { text: string, votes: number }[];
 
     @CreateDateColumn()
-    createdAt!: Date;
+    createdAt: Date;
 
-    @Column('json', { nullable: true })
-    messageId?: WAMessageKey;
+    @Column()
+    status: string;
+
+    @Column({ nullable: true, type: 'varchar' })
+    messageId: string | null;
+
+    @Column({ default: 0 })
+    totalVotes: number;
+
+    @Column('simple-json', { nullable: true })
+    voters: { name: string, vote: string }[];
 } 
